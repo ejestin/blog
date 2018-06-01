@@ -18,9 +18,9 @@ blog](https://blog.osones.com/en).
 
 ## Some context
 
-One of our clients asked us for a feature in their CodePipeline CI/CD that is not native to AWS: they need to deploy in production but on a schedule, for example only on mondays at 9am.<br />
+Some of our clients asked us for a feature in their CodePipeline CI/CD that is not native to AWS: they need to deploy in production but on a schedule, for example only on mondays at 9am.<br />
 
-As I said, that feature is not native to AWS CodePipeline service, so we used a little trick, using **AWS Lambda** and **CloudWatch Events**. To simplify the deployment, as usual we then created an **AWS CloudFormation template** to automate things a bit.<br />
+As I said, that feature is not native to AWS CodePipeline service, so we used a little trick, triggering **AWS Lambda** with **CloudWatch Events**. To simplify the deployment, as usual we then created an **AWS CloudFormation template** to automate things a bit.<br />
 
 Let's dive in!
 
