@@ -13,38 +13,38 @@ draft: false
 
 # Context
 
-Since I like to automate kind of everything I can, I struggled with AWS Aurora
+Since I like to automate almost everything I can, I struggled with AWS Aurora
 for a client who needed multiple schemes and a non-root user. With
 CloudFormation (or even through the web console), you can only launch your
 Aurora database with one scheme and the root user.<br>
 Some may say that we don't launch an Aurora database that often, but hey, in
-some cases, you do. For example for a fast growing start up (web app editor)
+some cases, you do. For example: a fast growing start up (web app editor)
 which onboard new customers every single month, and whose customers require to
 be on a dedicated infrastructure (yes, some still does).
 
-To do so I struggled with **CloudFormation notifications**, **SNS** and
+To do so I played around with **CloudFormation notifications**, **SNS** and
 **Lambda**.
 
-# A brief history of search
+# A brief history of my research
 
 Basicaly, I just launch an Aurora cluster with CloudFormation. So I first want
 to know when my cluster is ready so I can launch a Lambda function which will
 bootstrap my schemes and low privileges users.<br>
 After launching a first Aurora cluster and watching closely when CloudFormation
 told me `CREATION_COMPLETE` so I could connect to my [Mysql] database, I
-found out that CloudFormation wait until the resource is completly ready, so
+found out that CloudFormation waits until the resource is completely ready, so
 when the Aurora cluster generates an endpoint and switch to `Ready` status.<br>
 Perfect! Exactly what I was looking for, I can do something with
-CloudFormation, so it can told me that the database is ready.
+CloudFormation, so it can tell me when the database is ready.
 
-Next step, I go to CloudWatch Events to look for a CloudFormation Event to
+Next step, I look at my CloudWatch Events to find a CloudFormation Event which will 
 trigger my Lambda... *Doh!* No CloudFormation Event, or at least, that's not
-pretty clear.<br>
+very clear.<br>
 After some research, I found out that we can generate notifications and put those as
 messages in a SNS queue. You simply have to add the `--notification-arns
-<my-arns>` when launching the CloudFormation stack.
+<my-arns>` parameter when launching the CloudFormation stack.
 
-So lets destroy everything and recreate all the things. Wait, my Lambda, it
+So lets destroy everything and recreate all the components. Wait, my Lambda 
 needs to run inside my VPC so I can attribute it a Security Group and allow it
 to access to my Aurora cluster, easy, that's a feature made by AWS, you just
 need to be careful on how often you trigger your Lambda, because you don't want to use
@@ -61,7 +61,7 @@ queue. Lets create them in the same stack
   3. Create an Aurora cluster within a separate CloudFormation stack, so we can
 enable `--notification-arns` option on this stack
 
-I tried a quick shema so it can be a little more visual:
+I came up with a quick shema to make it a little more visual:
 <center>![Architecture](https://static.blog.ricebowljr.cc/cloudformation-sns-lambda-resource-bootstrap.png)</center>
 
 As you can see, the workflow is the following (lets assume we already have created the SNS queue and Lambda function):
@@ -73,8 +73,8 @@ As you can see, the workflow is the following (lets assume we already have creat
   4. The Lambda function queries the CloudFormation API to see if the stack
      is in `CREATE_COMPLETE` state. If not, the process loops there, with
      the next CloudFormation notification
-  5. The Lambda function catches a `CREATE_COMPLETE` status, so it can start the
-     script that will create the schemes and the user on the database
+  5. The Lambda function catches the `CREATE_COMPLETE` status, it can then start the
+     script that will create the schemes and user on the database
 
 # Code
 
@@ -212,7 +212,7 @@ function, and that's something you don't have to do within the web console.<br>
 You may want to retrieve the root user and password from the parameter store so
 they don't appear in clear text in your Lambda.<br>
 You can also see that we grab the Lambda code from an Osones public bucket to
-make your life easier, but for you, here is the code:
+make your life easier, here is the code if you don't want to rely on external sources:
 ```
 'use strict';
 const AWS = require("aws-sdk");
@@ -354,7 +354,7 @@ set within the Lambda function, which in our case is `osones-blog-demo-aurora`.
 Otherwise the function won't find the stack and won't be able to check the
 status and retrive the Aurora endpoint.
 
-And with all that your good to go. You're free to delete the SNS/Lambda stack
+And with all that you are good to go. You're free to delete the SNS/Lambda stack
 since it is only one time usage.
 
 Happy automation!
